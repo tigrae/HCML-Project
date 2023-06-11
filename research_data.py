@@ -77,7 +77,9 @@ if __name__ == "__main__":
     for i in range(len(genuine_ID_sets)):
         combs = combinations(genuine_ID_sets[i], 2)
         for comb in combs:
-            print(comb)
+            x_probe, x_ref = X[comb[0], :], X[comb[1], :]
+            score = sim_fct(x_probe, x_ref)
+            scores.append(score)
             # todo: calculate difference between each, sum up, take average after
 
     pass
