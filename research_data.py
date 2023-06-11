@@ -73,11 +73,20 @@ if __name__ == "__main__":
     eval = Evaluate(test_embedding, test_identities, test_ethnicity, cos_sim)
     genuine_ID_sets = eval.ei._genuine_ID_sets
 
-
     for i in range(len(genuine_ID_sets)):
-        combs = combinations(genuine_ID_sets[i], 2)
+        combs = [(genuine_ID_sets[i][j], genuine_ID_sets[i][k])
+                 for j in range(len(genuine_ID_sets[i]))
+                 for k in range(j + 1, len(genuine_ID_sets[i]))]
         for comb in combs:
-            x_probe, x_ref = X[comb[0], :], X[comb[1], :]
+
+            # get the two embeddings belonging to the
+            emb1, emb2 = test_embedding[comb[0]], test_embedding[comb[1]]
+
+            # assert that identities truly are the same
+            assert test_identities[comb[0]] == my_list[comb[1]], f"Assertion failed: Identities at indices {index1} " \
+                                                                 f"and {index2} are not equal."
+
+            diff = np.abs(emb1, emb2)
             score = sim_fct(x_probe, x_ref)
             scores.append(score)
             # todo: calculate difference between each, sum up, take average after
