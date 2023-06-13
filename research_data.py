@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import math
 import sys
 
-test_embedding = np.load('data/test_emb.npy')
-test_ethnicity = np.load('data/test_ethnicity.npy')
-test_identities = np.load('data/test_id.npy')
+dev_embedding = np.load('data/development_emb.npy')
+dev_ethnicity = np.load('data/development_ethnicity.npy')
+dev_identities = np.load('data/development_id.npy')
 
 
 def count_identities_per_ethnicity(test_ethnicity, test_identities):
@@ -70,28 +70,42 @@ if __name__ == "__main__":
     """
 
     # get genuine ID sets from Evaluate class
-    eval = Evaluate(test_embedding, test_identities, test_ethnicity, cos_sim)
+    eval = Evaluate(dev_embedding, dev_identities, dev_ethnicity, cos_sim)
     genuine_ID_sets = eval.ei._genuine_ID_sets
 
+    # iterate over each genuine id_Set
+    total_diff = np.zeros((1, 512))
     for i in range(len(genuine_ID_sets)):
+
+        # get all possible combinations of the current genuine id set
         combs = [(genuine_ID_sets[i][j], genuine_ID_sets[i][k])
                  for j in range(len(genuine_ID_sets[i]))
                  for k in range(j + 1, len(genuine_ID_sets[i]))]
+
+        # iterate over all combinations and sum of the differences between all features of the two embeddings
+        set_diff = np.zeros((1, 512))
         for comb in combs:
 
             # get the two embeddings belonging to the
             emb1, emb2 = test_embedding[comb[0]], test_embedding[comb[1]]
 
             # assert that identities truly are the same
-            assert test_identities[comb[0]] == my_list[comb[1]], f"Assertion failed: Identities at indices {index1} " \
-                                                                 f"and {index2} are not equal."
+            assert test_identities[comb[0]] == test_identities[comb[1]], \
+                f"Assertion failed: Identities at indices {comb[0]} and {comb[1]} are not equal."
 
-            diff = np.abs(emb1, emb2)
-            score = sim_fct(x_probe, x_ref)
-            scores.append(score)
-            # todo: calculate difference between each, sum up, take average after
+            # add to combinu
+            set_diff += np.abs(emb1 - emb2)
 
+            pass
+
+        # average set differences and add them to total differences
+        set_diff /= len(combs)
+        total_diff += set_diff
+
+    # average the total differences over all sets
+    total_diff /= len(genuine_ID_sets)
     pass
+
 
 
     # a = np.array([1, 2, 3])
