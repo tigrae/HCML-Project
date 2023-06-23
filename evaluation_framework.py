@@ -50,7 +50,47 @@ def chi2_distance(A, B):
     return 1 - math.log10(abs(chi))
 
 
-eval = Evaluate(test_embedding, test_identities, test_ethnicity, chi2_distance)
+def quartel(a,b):
+    a, b = a.reshape(-1), b.reshape(-1)
+    sumOfDifs = 0
+    for i in range(0,len(a)):
+        dif = pow(a[i]-b[i], 2)
+        sumOfDifs = sumOfDifs + dif
+    a.sort()
+    b.sort()
+    AuQuartel = a[len(a)//4]
+    AoQuartel = a[3*len(a)//4]
+    BuQuartel = b[len(b)//4]
+    BoQuartel = b[3*len(b)//4]
+    return 1-(pow(sumOfDifs, 0.5)/len(a))-0.002*(abs(np.median(a)-np.median(b))+abs(AoQuartel-BoQuartel)+abs(AuQuartel-BuQuartel))
+
+
+def squared_dist(a,b):
+    a, b = a.reshape(-1), b.reshape(-1)
+    sumOfDifs = 0
+    for i in range(0,len(a)):
+        dif = pow(a[i]-b[i],2)
+        sumOfDifs = sumOfDifs + dif
+    return (1-(pow(sumOfDifs,0.5)/len(a)))
+
+
+"""
+THIS IS THE FUNCTION. WOWOW!
+"""
+def similarity_with_weights(a, b):
+    weights_array = np.load("gen_imp_weights_50_50.npy")
+    a *= weights_array
+    b *= weights_array
+    return squared_dist(a, b)
+# with genuine_weights.npy:         1.0160617901720623
+# with genuine_weights_0.1.npy:     1.0160033973786078
+# with genuine_weights_sinus.npy:   1.0157728199444982
+
+# "gen_imp_weights_max.npy"         1.016513827673255
+# "gen_imp_weights_80_20.npy"       1.0161534785999218
+#
+
+eval = Evaluate(test_embedding, test_identities, test_ethnicity, cos_sim)
 
 # plot and show curve
 eval.plot_curve()
