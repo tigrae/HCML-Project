@@ -57,6 +57,46 @@ def euclidean_dist_simpler(a, b):
     return np.linalg.norm(a - b)
 
 
+def calculate_difference_array(id_sets, genuine):
+
+    # iterate over each genuine id_Set
+    total_diff = np.zeros((1, 512))
+    for i in range(len(id_sets)):
+
+        # get all possible combinations of the current genuine id set
+        combs = [(id_sets[i][j], id_sets[i][k])
+                 for j in range(len(id_sets[i]))
+                 for k in range(j + 1, len(id_sets[i]))]
+
+        # iterate over all combinations and sum of the differences between all features of the two embeddings
+        set_diff = np.zeros((1, 512))
+        for comb in combs:
+
+            # get the two embeddings belonging to the
+            emb1, emb2 = dev_embedding[comb[0]], dev_embedding[comb[1]]
+
+            # # assert that identities are genuine or imposters
+            # if genuine:
+            #     assert dev_identities[comb[0]] == dev_identities[comb[1]], \
+            #         f"Assertion failed: Identities at indices {comb[0]} and {comb[1]} are not equal for genuine set."
+            # else:
+            #     print(f"{dev_identities[comb[0]]} and {dev_identities[comb[1]]}")
+            #     assert dev_identities[comb[0]] != dev_identities[comb[1]], \
+            #         f"Assertion failed: Identities at indices {comb[0]} and {comb[1]} are equal for imposter set."
+
+            # add to combinu
+            set_diff += np.abs(emb1 - emb2)
+
+        # average set differences and add them to total differences
+        set_diff /= len(combs)
+        total_diff += set_diff
+
+    # average the total differences over all sets
+    total_diff /= len(id_sets)
+
+    return total_diff
+
+
 if __name__ == "__main__":
 
     """
@@ -70,46 +110,20 @@ if __name__ == "__main__":
     """
 
     # get genuine ID sets from Evaluate class
-    eval = Evaluate(dev_embedding, dev_identities, dev_ethnicity, cos_sim)
-    genuine_ID_sets = eval.ei._genuine_ID_sets
+    eval_dev = Evaluate(dev_embedding, dev_identities, dev_ethnicity, cos_sim)
+    genuine_id_sets = eval_dev.ei._genuine_ID_sets
+    imposter_id_sets = eval_dev.ei._imposter_ID_sets
 
-    # iterate over each genuine id_Set
-    total_diff = np.zeros((1, 512))
-    for i in range(len(genuine_ID_sets)):
+    genuine_wights = calculate_difference_array(genuine_id_sets, True)
+    imposter_weights = calculate_difference_array(imposter_id_sets, False)
 
-        # get all possible combinations of the current genuine id set
-        combs = [(genuine_ID_sets[i][j], genuine_ID_sets[i][k])
-                 for j in range(len(genuine_ID_sets[i]))
-                 for k in range(j + 1, len(genuine_ID_sets[i]))]
+    print(len(genuine_wights))
+    print(len(imposter_weights))
 
-        # iterate over all combinations and sum of the differences between all features of the two embeddings
-        set_diff = np.zeros((1, 512))
-        for comb in combs:
-
-            # get the two embeddings belonging to the
-            emb1, emb2 = test_embedding[comb[0]], test_embedding[comb[1]]
-
-            # assert that identities truly are the same
-            assert test_identities[comb[0]] == test_identities[comb[1]], \
-                f"Assertion failed: Identities at indices {comb[0]} and {comb[1]} are not equal."
-
-            # add to combinu
-            set_diff += np.abs(emb1 - emb2)
-
-            pass
-
-        # average set differences and add them to total differences
-        set_diff /= len(combs)
-        total_diff += set_diff
-
-    # average the total differences over all sets
-    total_diff /= len(genuine_ID_sets)
     pass
 
+    genuine_wights = 1-((genuine_wights - 0.02324784459798256) * 1000 / 5.355507872984975)
 
+    np.save("genuine_weights.npy", genuine_wights)
 
-    # a = np.array([1, 2, 3])
-    # b = np.array([4, 5, 6])
-    #
-    # print(euclidian_distance(a, b))
-    # print(euclidean_dist_simpler(a, b))
+    pass

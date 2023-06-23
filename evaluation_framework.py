@@ -44,13 +44,51 @@ def myFunc2(a,b):
     return max(1-(pow(float(sumOfDifs),0.5)/len(a)),0)
 
 
+def similarity_with_weights(a, b):
+    weights_array = np.load("genuine_weights.npy")
+    a *= weights_array
+    b *= weights_array
+    return myFunc3(a, b)
+
+
 def chi2_distance(A, B):
     # compute the chi-squared distance using above formula
     chi = 0.5 * np.sum([sigmoid(((a - b) ** 2) / (a + b)) for (a, b) in zip(A, B)])
     return 1 - math.log10(abs(chi))
 
 
-eval = Evaluate(test_embedding, test_identities, test_ethnicity, chi2_distance)
+def quartel(a,b):
+    # quartel + weights: 1.016061774441784
+    #                    1.0160617901720623
+    a, b = a.reshape(-1), b.reshape(-1)
+    sumOfDifs = 0
+    Max = max(a.max(), b.max())
+    Min = min(a.min(), b.min())
+    absoluteDifference =  (Max-Min)
+    for i in range(0,len(a)):
+        dif = pow(a[i]-b[i],2)
+        sumOfDifs = sumOfDifs + dif
+    a.sort()
+    b.sort()
+    AuQuartel = a[len(a)//4]
+    AoQuartel = a[3*len(a)//4]
+    BuQuartel = b[len(b)//4]
+    BoQuartel = b[3*len(b)//4]
+    absoluteQuartel = max(AoQuartel,BoQuartel)-min(AuQuartel,BuQuartel)
+    QuartelFaktor = (AoQuartel-AuQuartel)*(BoQuartel-BuQuartel)/pow(absoluteQuartel,2)
+    return max(1-(pow(sumOfDifs,0.5)/(absoluteDifference + len(a))), QuartelFaktor)
+
+
+def myFunc3(a,b):
+    a, b = a.reshape(-1), b.reshape(-1)
+    sumOfDifs = 0
+    for i in range(0,len(a)):
+        dif = pow(a[i]-b[i],2)
+        sumOfDifs = sumOfDifs + dif
+    return (1-(pow(sumOfDifs,0.5)/len(a)))
+
+
+eval = Evaluate(test_embedding, test_identities, test_ethnicity, similarity_with_weights)
 
 # plot and show curve
 eval.plot_curve()
