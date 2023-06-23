@@ -44,13 +44,6 @@ def myFunc2(a,b):
     return max(1-(pow(float(sumOfDifs),0.5)/len(a)),0)
 
 
-def similarity_with_weights(a, b):
-    weights_array = np.load("genuine_weights.npy")
-    a *= weights_array
-    b *= weights_array
-    return myFunc3(a, b)
-
-
 def chi2_distance(A, B):
     # compute the chi-squared distance using above formula
     chi = 0.5 * np.sum([sigmoid(((a - b) ** 2) / (a + b)) for (a, b) in zip(A, B)])
@@ -58,15 +51,10 @@ def chi2_distance(A, B):
 
 
 def quartel(a,b):
-    # quartel + weights: 1.016061774441784
-    #                    1.0160617901720623
     a, b = a.reshape(-1), b.reshape(-1)
     sumOfDifs = 0
-    Max = max(a.max(), b.max())
-    Min = min(a.min(), b.min())
-    absoluteDifference =  (Max-Min)
     for i in range(0,len(a)):
-        dif = pow(a[i]-b[i],2)
+        dif = pow(a[i]-b[i], 2)
         sumOfDifs = sumOfDifs + dif
     a.sort()
     b.sort()
@@ -74,12 +62,10 @@ def quartel(a,b):
     AoQuartel = a[3*len(a)//4]
     BuQuartel = b[len(b)//4]
     BoQuartel = b[3*len(b)//4]
-    absoluteQuartel = max(AoQuartel,BoQuartel)-min(AuQuartel,BuQuartel)
-    QuartelFaktor = (AoQuartel-AuQuartel)*(BoQuartel-BuQuartel)/pow(absoluteQuartel,2)
-    return max(1-(pow(sumOfDifs,0.5)/(absoluteDifference + len(a))), QuartelFaktor)
+    return 1-(pow(sumOfDifs, 0.5)/len(a))-0.002*(abs(np.median(a)-np.median(b))+abs(AoQuartel-BoQuartel)+abs(AuQuartel-BuQuartel))
 
 
-def myFunc3(a,b):
+def squared_dist(a,b):
     a, b = a.reshape(-1), b.reshape(-1)
     sumOfDifs = 0
     for i in range(0,len(a)):
@@ -88,7 +74,23 @@ def myFunc3(a,b):
     return (1-(pow(sumOfDifs,0.5)/len(a)))
 
 
-eval = Evaluate(test_embedding, test_identities, test_ethnicity, similarity_with_weights)
+"""
+THIS IS THE FUNCTION. WOWOW!
+"""
+def similarity_with_weights(a, b):
+    weights_array = np.load("gen_imp_weights_50_50.npy")
+    a *= weights_array
+    b *= weights_array
+    return squared_dist(a, b)
+# with genuine_weights.npy:         1.0160617901720623
+# with genuine_weights_0.1.npy:     1.0160033973786078
+# with genuine_weights_sinus.npy:   1.0157728199444982
+
+# "gen_imp_weights_max.npy"         1.016513827673255
+# "gen_imp_weights_80_20.npy"       1.0161534785999218
+#
+
+eval = Evaluate(test_embedding, test_identities, test_ethnicity, cos_sim)
 
 # plot and show curve
 eval.plot_curve()

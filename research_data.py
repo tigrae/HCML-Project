@@ -2,6 +2,7 @@ from evaluation_functions import *
 import matplotlib.pyplot as plt
 import math
 import sys
+import numpy as np
 
 dev_embedding = np.load('data/development_emb.npy')
 dev_ethnicity = np.load('data/development_ethnicity.npy')
@@ -57,6 +58,14 @@ def euclidean_dist_simpler(a, b):
     return np.linalg.norm(a - b)
 
 
+def get_id_sets():
+    # get ID sets from Evaluate class
+    eval_dev = Evaluate(dev_embedding, dev_identities, dev_ethnicity, cos_sim)
+    genuine_id_sets = eval_dev.ei._genuine_ID_sets
+    imposter_id_sets = eval_dev.ei._imposter_ID_sets
+    return genuine_id_sets, imposter_id_sets
+
+
 def calculate_difference_array(id_sets, genuine):
 
     # iterate over each genuine id_Set
@@ -97,6 +106,35 @@ def calculate_difference_array(id_sets, genuine):
     return total_diff
 
 
+def crunch_array(a, lower_bound):
+    return a * (1-lower_bound) + lower_bound
+
+
+def crunch_sinus(a):
+    return (-1*np.cos(a*np.pi)+1)/2
+
+
+def plot_arrays(a, b):
+    n = a.shape[1]  # Length of the arrays
+    x = np.arange(n)  # X-axis values
+    bar_width = 0.35  # Width of the bars
+
+    # Plotting the bar chart
+    plt.bar(x - bar_width/2, a.flatten(), width=bar_width, label='Bar 1')
+    plt.bar(x + bar_width/2, b.flatten(), width=bar_width, label='Bar 2')
+
+    # Adding labels and title
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('Bar Chart')
+
+    # Adding legend
+    plt.legend()
+
+    # Displaying the chart
+    plt.show()
+
+
 if __name__ == "__main__":
 
     """
@@ -110,20 +148,30 @@ if __name__ == "__main__":
     """
 
     # get genuine ID sets from Evaluate class
-    eval_dev = Evaluate(dev_embedding, dev_identities, dev_ethnicity, cos_sim)
-    genuine_id_sets = eval_dev.ei._genuine_ID_sets
-    imposter_id_sets = eval_dev.ei._imposter_ID_sets
+    genuine_id_sets, imposter_id_sets = get_id_sets()
 
-    genuine_wights = calculate_difference_array(genuine_id_sets, True)
+    genuine_weights = calculate_difference_array(genuine_id_sets, True)
     imposter_weights = calculate_difference_array(imposter_id_sets, False)
 
-    print(len(genuine_wights))
+    print(len(genuine_weights))
     print(len(imposter_weights))
+
+    print(genuine_weights.shape)
+
+
+    genuine_weights_normalized = 1-((genuine_weights - 0.02324784459798256) / 0.005355507872984975)
+    imposter_weights_normalized = ((imposter_weights - 0.04022575317994121) / (0.06510891313740573 - 0.04022575317994121))
+
+    weights_added_max = np.maximum(genuine_weights_normalized, imposter_weights_normalized)
+    weights_added_80_20 = genuine_weights_normalized * 0.8 + imposter_weights_normalized * 0.2
+    weights_added_50_50 = genuine_weights_normalized * 0.5 + imposter_weights_normalized * 0.5
 
     pass
 
-    genuine_wights = 1-((genuine_wights - 0.02324784459798256) * 1000 / 5.355507872984975)
+    # plot_arrays(genuine_weights_normalized, imposter_weights_normalized)
 
-    np.save("genuine_weights.npy", genuine_wights)
+    np.save("gen_imp_weights_max.npy", weights_added_max)
+    np.save("gen_imp_weights_80_20.npy", weights_added_80_20)
+    np.save("gen_imp_weights_50_50.npy", weights_added_50_50)
 
     pass
