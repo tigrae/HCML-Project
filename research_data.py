@@ -120,8 +120,8 @@ def plot_arrays(a, b):
     bar_width = 0.35  # Width of the bars
 
     # Plotting the bar chart
-    plt.bar(x - bar_width/2, a.flatten(), width=bar_width, label='Bar 1')
-    plt.bar(x + bar_width/2, b.flatten(), width=bar_width, label='Bar 2')
+    plt.bar(x - bar_width/2, a.flatten(), width=bar_width, label='genuine')
+    plt.bar(x + bar_width/2, b.flatten(), width=bar_width, label='imposter')
 
     # Adding labels and title
     plt.xlabel('X-axis')
@@ -153,8 +153,6 @@ if __name__ == "__main__":
     genuine_weights = calculate_difference_array(genuine_id_sets, True)
     imposter_weights = calculate_difference_array(imposter_id_sets, False)
 
-    print(len(genuine_weights))
-    print(len(imposter_weights))
 
     print(genuine_weights.shape)
 
@@ -168,7 +166,8 @@ if __name__ == "__main__":
 
     pass
 
-    # plot_arrays(genuine_weights_normalized, imposter_weights_normalized)
+    plot_arrays(genuine_weights, imposter_weights)
+    plot_arrays(genuine_weights_normalized, imposter_weights_normalized)
 
     np.save("gen_imp_weights_max.npy", weights_added_max)
     np.save("gen_imp_weights_80_20.npy", weights_added_80_20)
